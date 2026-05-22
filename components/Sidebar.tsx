@@ -56,6 +56,18 @@ export default function Sidebar() {
         >
           관리자 메뉴
         </Link>
+        <Link
+          href="/admin/users"
+          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          회원 관리
+        </Link>
+        <Link
+          href="/admin/reports"
+          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          신고 관리
+        </Link>
       </div>
     </aside>
   );

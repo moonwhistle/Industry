@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPost } from '@/app/actions/posts';
+import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
 
 const CATEGORIES = [
   { slug: 'notice', name: '공지사항' },
@@ -19,14 +20,9 @@ const CATEGORIES = [
 
 function WriteForm() {
   const searchParams = useSearchParams();
-  const [category, setCategory] = useState('free');
+  const [category, setCategory] = useState(searchParams.get('category') ?? 'free');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const cat = searchParams.get('category');
-    if (cat) setCategory(cat);
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,6 +44,8 @@ function WriteForm() {
       <h1 className="mb-6 text-2xl font-bold text-blue-900">글쓰기</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <CommunityPolicyNotice />
+
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             게시판
