@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { signOut } from '@/app/actions/auth';
+import { createClient } from '@/lib/supabase/client';
 
 const menus = [
   { name: '홈', href: '/' },
@@ -20,6 +22,18 @@ const menus = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <aside className="hidden w-56 shrink-0 md:block">
@@ -69,14 +83,23 @@ export default function Sidebar() {
         >
           신고 관리
         </Link>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="mt-4 w-full rounded-lg border border-red-300 px-3 py-2.5 text-center text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        {isLoggedIn ? (
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="mt-4 w-full rounded-lg border border-red-300 px-3 py-2.5 text-center text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+            >
+              로그아웃
+            </button>
+          </form>
+        ) : (
+          <Link
+            href="/login"
+            className="mt-4 block rounded-lg bg-blue-900 px-3 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-800"
           >
-            로그아웃
-          </button>
-        </form>
+            로그인
+          </Link>
+        )}
       </div>
     </aside>
   );
