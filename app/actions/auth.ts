@@ -38,6 +38,8 @@ export async function signUp(formData: FormData) {
     user_role,
     industry,
     manager_type: user_role === '관리자' ? manager_type : null,
+    public_id: `USER-${userId.slice(0, 8)}`,
+    is_admin: user_role === '관리자',
   });
 
   if (profileError) {

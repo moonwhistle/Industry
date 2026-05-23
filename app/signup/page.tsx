@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { signUp } from '@/app/actions/auth';
+import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
 
 const MANAGER_TYPES = [
   '안전관리자',
@@ -36,6 +37,8 @@ export default function SignupPage() {
         <h1 className="mb-6 text-2xl font-bold text-blue-900">회원가입</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <CommunityPolicyNotice />
+
           <Field label="이메일">
             <input
               name="email"
