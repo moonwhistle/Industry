@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut } from '@/app/actions/auth';
 
 const menus = [
   { name: '홈', href: '/' },
@@ -68,6 +69,14 @@ export default function Sidebar() {
         >
           신고 관리
         </Link>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="mt-4 w-full rounded-lg border border-red-300 px-3 py-2.5 text-center text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+          >
+            로그아웃
+          </button>
+        </form>
       </div>
     </aside>
   );
