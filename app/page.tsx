@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import SiteIntro from '@/components/SiteIntro';
 import StatsCard from '@/components/StatsCard';
 import DashboardPreview from '@/components/DashboardPreview';
 import type { RecentPostItem } from '@/types';
@@ -27,6 +28,8 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
+      <SiteIntro />
+
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard title="가입 회원 수" value={memberCount ?? 0} icon="👷" />
         <StatsCard title="전체 게시물" value={postCount ?? 0} icon="📋" />

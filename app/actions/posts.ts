@@ -12,6 +12,20 @@ export async function createPost(formData: FormData) {
     redirect('/login');
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('account_status')
+    .eq('id', userData.user.id)
+    .single();
+
+  if (profile?.account_status === 'suspended') {
+    return { error: '신고 누적으로 인해 사용이 정지된 계정입니다.' };
+  }
+
+  if (profile?.account_status === 'banned') {
+    return { error: '영구 정지된 계정입니다.' };
+  }
+
   const title = (formData.get('title') as string).trim();
   const content = (formData.get('content') as string).trim();
   const category_slug = formData.get('category_slug') as CategorySlug;

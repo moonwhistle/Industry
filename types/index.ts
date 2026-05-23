@@ -10,6 +10,23 @@ export type ManagerType =
 
 export type QnaStatus = '답변대기' | '답변완료';
 export type ReportStatus = '접수' | '처리중' | '처리완료';
+export type AccountStatus = 'active' | 'suspended' | 'banned';
+export type AnswerOpinionType =
+  | '이의제기'
+  | '추가의견'
+  | '근거보완'
+  | '오류수정요청';
+export type ReportTargetType = 'post' | 'comment' | 'answer' | 'answer_opinion';
+export type ReportReason =
+  | '욕설/비방'
+  | '성희롱'
+  | '혐오/차별'
+  | '허위사실'
+  | '개인정보 노출'
+  | '회사명/현장명 언급'
+  | '스팸/광고'
+  | '기타';
+export type ModerationStatus = '접수' | '검토중' | '처리완료' | '반려';
 
 export type CategorySlug =
   | 'notice'
@@ -32,6 +49,11 @@ export interface Profile {
   user_role: UserRole;
   industry: Industry;
   manager_type: ManagerType | null;
+  public_id: string | null;
+  account_status: AccountStatus;
+  report_count: number;
+  suspended_until: string | null;
+  is_admin: boolean;
   profile_image: string | null;
   created_at: string;
 }
@@ -57,12 +79,17 @@ export interface Post {
   accident_type: string | null;
   accident_cause: string | null;
   prevention_plan: string | null;
+  is_hidden: boolean;
+  hidden_reason: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface PostWithAuthor extends Post {
-  profiles: Pick<Profile, 'nickname' | 'email'> | null;
+  profiles: Pick<
+    Profile,
+    'nickname' | 'email' | 'public_id' | 'user_role' | 'industry'
+  > | null;
 }
 
 export interface PostListItem {
@@ -88,11 +115,52 @@ export interface Comment {
   author_id: string | null;
   content: string;
   parent_comment_id: number | null;
+  is_hidden: boolean;
+  hidden_reason: string | null;
   created_at: string;
 }
 
 export interface CommentWithAuthor extends Comment {
-  profiles: Pick<Profile, 'nickname' | 'email'> | null;
+  profiles: Pick<Profile, 'nickname' | 'email' | 'public_id' | 'user_role'> | null;
+}
+
+export interface Answer {
+  id: number;
+  post_id: number;
+  author_id: string | null;
+  content: string;
+  source: string | null;
+  is_selected: boolean;
+  is_admin_answer: boolean;
+  is_hidden: boolean;
+  hidden_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnswerOpinion {
+  id: number;
+  answer_id: number;
+  author_id: string | null;
+  opinion_type: AnswerOpinionType;
+  content: string;
+  source: string | null;
+  is_hidden: boolean;
+  hidden_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnswerOpinionWithAuthor extends AnswerOpinion {
+  profiles: Pick<Profile, 'nickname' | 'email' | 'public_id' | 'user_role'> | null;
+}
+
+export interface AnswerWithAuthor extends Answer {
+  profiles: Pick<
+    Profile,
+    'nickname' | 'email' | 'public_id' | 'user_role' | 'industry'
+  > | null;
+  answer_opinions: AnswerOpinionWithAuthor[];
 }
 
 export interface Like {
@@ -104,10 +172,13 @@ export interface Like {
 
 export interface Report {
   id: number;
-  post_id: number;
+  target_type: ReportTargetType;
+  target_id: number;
+  reported_user_id: string | null;
   reporter_id: string | null;
-  reason: string | null;
-  status: ReportStatus;
+  reason: ReportReason;
+  detail: string | null;
+  status: ModerationStatus;
   created_at: string;
 }
 
