@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { UserRole, Industry, ManagerType } from '@/types';
 
 export async function signUp(formData: FormData) {
@@ -27,7 +28,8 @@ export async function signUp(formData: FormData) {
     return { error: '회원가입 중 문제가 발생했습니다.' };
   }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
+  const adminSupabase = createAdminClient();
+  const { error: profileError } = await adminSupabase.from('profiles').insert({
     id: userId,
     email,
     nickname,
