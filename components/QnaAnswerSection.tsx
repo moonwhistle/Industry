@@ -4,13 +4,16 @@ import AdminContentActions from './admin/AdminContentActions';
 import AnswerForm from './forms/AnswerForm';
 import AnswerOpinionForm from './forms/AnswerOpinionForm';
 import ReportButton from './ReportButton';
+import SelectAnswerButton from './SelectAnswerButton';
 
 type QnaAnswerSectionProps = {
   postId: number;
+  questionAuthorId: string | null;
 };
 
 export default async function QnaAnswerSection({
   postId,
+  questionAuthorId,
 }: QnaAnswerSectionProps) {
   const supabase = await createClient();
 
@@ -71,6 +74,9 @@ export default async function QnaAnswerSection({
     : { data: null };
   const isAdmin = Boolean(
     currentProfile?.is_admin || currentProfile?.user_role === '관리자'
+  );
+  const isQuestionAuthor = Boolean(
+    userData.user && questionAuthorId && userData.user.id === questionAuthorId
   );
   const typedAnswers = (answers ?? []) as unknown as AnswerWithAuthor[];
 
@@ -138,6 +144,13 @@ export default async function QnaAnswerSection({
                   targetType="answer"
                   targetId={answer.id}
                   reportedUserId={answer.author_id}
+                />
+              )}
+
+              {isQuestionAuthor && (
+                <SelectAnswerButton
+                  answerId={answer.id}
+                  isSelected={answer.is_selected}
                 />
               )}
             </div>

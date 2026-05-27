@@ -124,7 +124,10 @@ export default async function PostDetailPage({
       {isAdmin && <AdminContentActions targetType="post" targetId={typedPost.id} />}
 
       {isQnaPost ? (
-        <QnaAnswerSection postId={typedPost.id} />
+        <QnaAnswerSection
+          postId={typedPost.id}
+          questionAuthorId={typedPost.author_id}
+        />
       ) : (
         <CommentSection
           postId={postId}

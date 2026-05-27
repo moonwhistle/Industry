@@ -1,5 +1,8 @@
-import { redirect } from 'next/navigation';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import AdminReportStatusControl from '@/components/AdminReportStatusControl';
+import type { ReportStatus } from '@/app/actions/reports';
 
 type ReportProfile = {
   public_id: string | null;
@@ -12,11 +15,11 @@ type ReportProfile = {
 
 type AdminReport = {
   id: number;
-  target_type: string;
+  target_type: 'post' | 'comment' | 'answer' | 'answer_opinion';
   target_id: number;
   reason: string;
   detail: string | null;
-  status: string;
+  status: ReportStatus;
   created_at: string;
   reported_user: ReportProfile | null;
   reporter: ReportProfile | null;
@@ -24,11 +27,17 @@ type AdminReport = {
 
 export default async function AdminReportsPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
+  const t = await getTranslations('admin.reports');
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login');
+  if (!user) {
+    redirect({ href: '/login', locale });
+    return null;
+  }
 
   const { data: currentProfile } = await supabase
     .from('profiles')
@@ -37,7 +46,8 @@ export default async function AdminReportsPage() {
     .single();
 
   if (!currentProfile?.is_admin && currentProfile?.user_role !== '관리자') {
-    redirect('/admin');
+    redirect({ href: '/admin', locale });
+    return null;
   }
 
   const { data: reports } = await supabase
@@ -68,46 +78,63 @@ export default async function AdminReportsPage() {
     .order('created_at', { ascending: false });
 
   const typedReports = (reports ?? []) as unknown as AdminReport[];
+  const dateLocale = locale === 'en' ? 'en-US' : 'ko-KR';
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow">
-      <h1 className="mb-6 text-3xl font-bold text-blue-950">신고 관리</h1>
+      <h1 className="mb-6 text-3xl font-bold text-blue-950">{t('title')}</h1>
 
       <div className="space-y-4">
         {typedReports.map((report) => (
           <div key={report.id} className="rounded-xl border border-gray-200 p-4">
             <div className="mb-2 flex flex-wrap gap-3 text-sm text-gray-600">
-              <span>신고 유형: {report.reason}</span>
-              <span>대상: {report.target_type}</span>
-              <span>대상 ID: {report.target_id}</span>
-              <span>상태: {report.status}</span>
+              <span>{t('reasonLabel', { reason: report.reason })}</span>
               <span>
-                접수일: {new Date(report.created_at).toLocaleString('ko-KR')}
+                {t('targetTypeLabel', {
+                  targetType: t(`targetType_${report.target_type}`),
+                })}
               </span>
+              <span>
+                {t('targetIdLabel', { targetId: report.target_id })}
+              </span>
+              <span>
+                {t('createdAtLabel', {
+                  createdAt: new Date(report.created_at).toLocaleString(
+                    dateLocale
+                  ),
+                })}
+              </span>
+            </div>
+
+            <div className="mb-3">
+              <AdminReportStatusControl
+                reportId={report.id}
+                currentStatus={report.status}
+              />
             </div>
 
             <div className="rounded-lg bg-gray-50 p-3 text-sm">
               <p>
-                <strong>신고 대상 사용자:</strong>{' '}
+                <strong>{t('reportedUser')}:</strong>{' '}
                 {report.reported_user?.nickname} /{' '}
                 {report.reported_user?.public_id}
               </p>
               <p>
-                <strong>사용자 유형:</strong>{' '}
+                <strong>{t('reportedUserType')}:</strong>{' '}
                 {report.reported_user?.user_role} /{' '}
                 {report.reported_user?.industry}
               </p>
               <p>
-                <strong>계정 상태:</strong>{' '}
+                <strong>{t('accountStatus')}:</strong>{' '}
                 {report.reported_user?.account_status}
               </p>
               <p>
-                <strong>누적 신고 수:</strong>{' '}
+                <strong>{t('reportCount')}:</strong>{' '}
                 {report.reported_user?.report_count}
               </p>
               <p>
-                <strong>신고자:</strong> {report.reporter?.nickname} /{' '}
-                {report.reporter?.public_id}
+                <strong>{t('reporter')}:</strong>{' '}
+                {report.reporter?.nickname} / {report.reporter?.public_id}
               </p>
             </div>
 
@@ -121,7 +148,7 @@ export default async function AdminReportsPage() {
 
         {typedReports.length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
-            접수된 신고가 없습니다.
+            {t('empty')}
           </div>
         )}
       </div>

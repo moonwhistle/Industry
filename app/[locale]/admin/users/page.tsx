@@ -1,14 +1,19 @@
-import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import UserActionButtons from '@/components/admin/UserActionButtons';
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login');
+  if (!user) {
+    redirect({ href: '/login', locale });
+    return null;
+  }
 
   const { data: currentProfile } = await supabase
     .from('profiles')
@@ -17,7 +22,7 @@ export default async function AdminUsersPage() {
     .single();
 
   if (!currentProfile?.is_admin && currentProfile?.user_role !== '관리자') {
-    redirect('/admin');
+    redirect({ href: '/admin', locale });
   }
 
   const { data: users } = await supabase

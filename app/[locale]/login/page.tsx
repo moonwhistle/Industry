@@ -1,10 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { signIn } from '@/app/actions/auth';
 
+function ConfirmBanner() {
+  const t = useTranslations();
+  const params = useSearchParams();
+  if (params.get('signup') !== 'confirm') return null;
+  return (
+    <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+      <p className="font-semibold">{t('auth.confirmEmailSent')}</p>
+      <p className="mt-1 text-xs text-blue-700">{t('auth.confirmEmailHint')}</p>
+    </div>
+  );
+}
+
 export default function LoginPage() {
+  const t = useTranslations();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,12 +38,16 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md">
       <div className="rounded-2xl bg-white p-8 shadow">
-        <h1 className="mb-6 text-2xl font-bold text-blue-900">로그인</h1>
+        <h1 className="mb-6 text-2xl font-bold text-blue-900">{t('auth.login')}</h1>
+
+        <Suspense fallback={null}>
+          <ConfirmBanner />
+        </Suspense>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              이메일
+              {t('auth.email')}
             </label>
             <input
               name="email"
@@ -41,13 +60,13 @@ export default function LoginPage() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              비밀번호
+              {t('auth.password')}
             </label>
             <input
               name="password"
               type="password"
               required
-              placeholder="비밀번호"
+              placeholder={t('auth.password')}
               className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
@@ -63,14 +82,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-blue-900 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800 disabled:opacity-50"
           >
-            {loading ? '로그인 중...' : '로그인'}
+            {loading ? t('auth.loggingIn') : t('auth.loginCta')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          계정이 없으신가요?{' '}
+          {t('auth.noAccount')}{' '}
           <Link href="/signup" className="font-semibold text-blue-600 hover:underline">
-            회원가입
+            {t('auth.signup')}
           </Link>
         </p>
       </div>
