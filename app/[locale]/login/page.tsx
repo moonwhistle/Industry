@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { signIn } from '@/app/actions/auth';
 
-export default function LoginPage() {
+function ConfirmBanner() {
   const t = useTranslations();
   const params = useSearchParams();
-  const showConfirmBanner = params.get('signup') === 'confirm';
+  if (params.get('signup') !== 'confirm') return null;
+  return (
+    <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+      <p className="font-semibold">{t('auth.confirmEmailSent')}</p>
+      <p className="mt-1 text-xs text-blue-700">{t('auth.confirmEmailHint')}</p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  const t = useTranslations();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,12 +40,9 @@ export default function LoginPage() {
       <div className="rounded-2xl bg-white p-8 shadow">
         <h1 className="mb-6 text-2xl font-bold text-blue-900">{t('auth.login')}</h1>
 
-        {showConfirmBanner && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            <p className="font-semibold">{t('auth.confirmEmailSent')}</p>
-            <p className="mt-1 text-xs text-blue-700">{t('auth.confirmEmailHint')}</p>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <ConfirmBanner />
+        </Suspense>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
