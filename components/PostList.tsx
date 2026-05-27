@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import type { PostListItem } from '@/types';
 
 export default function PostList({ posts }: { posts: PostListItem[] }) {

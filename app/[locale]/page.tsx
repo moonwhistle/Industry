@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SiteIntro from '@/components/SiteIntro';
 import StatsCard from '@/components/StatsCard';
@@ -9,6 +10,8 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const t = await getTranslations('home');
+  const locale = await getLocale();
 
   const [
     { count: memberCount },
@@ -26,21 +29,23 @@ export default async function HomePage() {
       .limit(8),
   ]);
 
+  const dateLocale = locale === 'ko' ? 'ko-KR' : 'en-US';
+
   return (
     <div className="space-y-6">
       <SiteIntro />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatsCard title="가입 회원 수" value={memberCount ?? 0} icon="👷" />
-        <StatsCard title="전체 게시물" value={postCount ?? 0} icon="📋" />
-        <StatsCard title="전체 댓글" value={commentCount ?? 0} icon="💬" />
+        <StatsCard title={t('statsMembers')} value={memberCount ?? 0} icon="👷" />
+        <StatsCard title={t('statsPosts')} value={postCount ?? 0} icon="📋" />
+        <StatsCard title={t('statsComments')} value={commentCount ?? 0} icon="💬" />
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">최근 게시글</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t('recentTitle')}</h2>
           <Link href="/board/free" className="text-sm text-blue-600 hover:underline">
-            전체 보기
+            {t('recentSeeAll')}
           </Link>
         </div>
 
@@ -56,14 +61,14 @@ export default async function HomePage() {
                     {post.title}
                   </span>
                   <span className="shrink-0 text-xs text-gray-400">
-                    {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                    {new Date(post.created_at).toLocaleDateString(dateLocale)}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">아직 게시글이 없습니다.</p>
+          <p className="text-sm text-gray-400">{t('recentEmpty')}</p>
         )}
       </section>
 

@@ -1,12 +1,16 @@
+import { getLocale } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { Link, redirect } from '@/i18n/navigation';
 
 export default async function AdminPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login');
+  if (!user) {
+    redirect({ href: '/login', locale });
+    return null;
+  }
 
   const { data: profile } = await supabase
     .from('profiles')

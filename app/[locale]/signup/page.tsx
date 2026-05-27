@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { signUp } from '@/app/actions/auth';
 import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
+import type { ManagerType } from '@/types';
 
-const MANAGER_TYPES = [
+const MANAGER_TYPES: ManagerType[] = [
   '안전관리자',
   '보건관리자',
   '현장소장',
@@ -15,6 +17,7 @@ const MANAGER_TYPES = [
 ];
 
 export default function SignupPage() {
+  const t = useTranslations();
   const [userRole, setUserRole] = useState('근로자');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,12 +37,12 @@ export default function SignupPage() {
   return (
     <div className="mx-auto max-w-xl">
       <div className="rounded-2xl bg-white p-8 shadow">
-        <h1 className="mb-6 text-2xl font-bold text-blue-900">회원가입</h1>
+        <h1 className="mb-6 text-2xl font-bold text-blue-900">{t('auth.signup')}</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <CommunityPolicyNotice />
 
-          <Field label="이메일">
+          <Field label={t('auth.email')}>
             <input
               name="email"
               type="email"
@@ -49,46 +52,46 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="비밀번호 (6자 이상)">
+          <Field label={t('auth.passwordHint')}>
             <input
               name="password"
               type="password"
               required
               minLength={6}
-              placeholder="비밀번호"
+              placeholder={t('auth.password')}
               className={inputClass}
             />
           </Field>
 
-          <Field label="닉네임">
+          <Field label={t('auth.nickname')}>
             <input
               name="nickname"
               required
-              placeholder="표시될 닉네임"
+              placeholder={t('auth.nicknamePlaceholder')}
               className={inputClass}
             />
           </Field>
 
-          <Field label="국적">
+          <Field label={t('auth.nationality')}>
             <input
               name="nationality"
-              placeholder="한국, 베트남, 태국 등"
+              placeholder={t('auth.nationalityPlaceholder')}
               className={inputClass}
             />
           </Field>
 
-          <Field label="나이">
+          <Field label={t('auth.age')}>
             <input
               name="age"
               type="number"
               min={15}
               max={80}
-              placeholder="나이"
+              placeholder={t('auth.age')}
               className={inputClass}
             />
           </Field>
 
-          <Field label="구분">
+          <Field label={t('auth.role')}>
             <select
               name="user_role"
               required
@@ -96,25 +99,25 @@ export default function SignupPage() {
               onChange={(e) => setUserRole(e.target.value)}
               className={inputClass}
             >
-              <option value="근로자">근로자</option>
-              <option value="관리자">관리자</option>
+              <option value="근로자">{t('auth.roleWorker')}</option>
+              <option value="관리자">{t('auth.roleManager')}</option>
             </select>
           </Field>
 
-          <Field label="업종">
+          <Field label={t('auth.industry')}>
             <select name="industry" required className={inputClass}>
-              <option value="건설업">건설업</option>
-              <option value="제조업">제조업</option>
-              <option value="기타">기타</option>
+              <option value="건설업">{t('auth.industryConstruction')}</option>
+              <option value="제조업">{t('auth.industryManufacturing')}</option>
+              <option value="기타">{t('auth.industryEtc')}</option>
             </select>
           </Field>
 
           {userRole === '관리자' && (
-            <Field label="관리자 직무">
+            <Field label={t('auth.managerType')}>
               <select name="manager_type" required className={inputClass}>
-                <option value="">선택하세요</option>
-                {MANAGER_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                <option value="">{t('auth.managerTypeSelect')}</option>
+                {MANAGER_TYPES.map((mt) => (
+                  <option key={mt} value={mt}>{mt}</option>
                 ))}
               </select>
             </Field>
@@ -131,14 +134,14 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full rounded-lg bg-blue-900 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800 disabled:opacity-50"
           >
-            {loading ? '가입 중...' : '가입하기'}
+            {loading ? t('auth.signingUp') : t('auth.signupCta')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          이미 계정이 있으신가요?{' '}
+          {t('auth.hasAccount')}{' '}
           <Link href="/login" className="font-semibold text-blue-600 hover:underline">
-            로그인
+            {t('auth.login')}
           </Link>
         </p>
       </div>

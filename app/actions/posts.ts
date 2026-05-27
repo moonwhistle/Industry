@@ -1,15 +1,18 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { CategorySlug } from '@/types';
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient();
+  const locale = await getLocale();
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
-    redirect('/login');
+    redirect({ href: '/login', locale });
+    return;
   }
 
   const { data: profile } = await supabase
@@ -51,5 +54,5 @@ export async function createPost(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect(`/post/${post.id}`);
+  redirect({ href: `/post/${post.id}`, locale });
 }

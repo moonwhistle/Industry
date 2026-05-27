@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PostList from '@/components/PostList';
 import type { PostListItem, CategorySlug } from '@/types';
