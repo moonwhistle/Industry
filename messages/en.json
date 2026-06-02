@@ -45,7 +45,44 @@
     "hasAccount": "Already have an account?",
     "loginRequired": "You must be logged in.",
     "confirmEmailSent": "We sent a confirmation email. Click the link in your inbox to activate the account.",
-    "confirmEmailHint": "Don't forget to check the spam folder."
+    "confirmEmailHint": "Don't forget to check the spam folder.",
+    "forgot": {
+      "link": "Forgot password?",
+      "title": "Reset password",
+      "subtitle": "Enter the email you signed up with and we'll send you a reset link.",
+      "submit": "Send reset email",
+      "sending": "Sending...",
+      "sentTitle": "Email sent.",
+      "sentHint": "If that email is registered, you'll see a reset link in your inbox. For security, the same message is shown regardless of whether the account exists.",
+      "backToLogin": "Back to login",
+      "invalidEmail": "Please enter a valid email address."
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Enter your new password below.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Update password",
+      "submitting": "Updating...",
+      "mismatch": "Passwords do not match.",
+      "tooShort": "Password must be at least 6 characters.",
+      "successRedirect": "Password updated. Redirecting to login...",
+      "loading": "Checking session...",
+      "invalidLink": "This link is invalid or has expired.",
+      "requestAgain": "Request a new reset link"
+    },
+    "findEmail": {
+      "link": "Find email",
+      "title": "Find your email",
+      "subtitle": "We'll reveal a masked email only if the nickname, nationality, and industry you registered with all match.",
+      "submit": "Find email",
+      "searching": "Searching...",
+      "foundTitle": "We found a matching email.",
+      "foundHint": "For security only part of the address is shown. If this is you, sign in using the password reset link.",
+      "notFound": "No account matches the details you entered.",
+      "rateLimited": "Too many requests. Please try again in a moment.",
+      "invalidInput": "Please double-check your input."
+    }
   },
   "nav": {
     "boardTitle": "Community Board",

@@ -27,11 +27,11 @@ export async function updateReportStatus(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_admin, user_role')
+    .select('is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.is_admin && profile?.user_role !== '관리자') {
+  if (!profile?.is_admin) {
     return { error: 'FORBIDDEN' as const };
   }
 

@@ -86,6 +86,22 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="mt-4 flex items-center justify-center gap-3 text-xs text-gray-500">
+          <Link
+            href="/find-email"
+            className="font-semibold text-gray-600 hover:text-blue-700 hover:underline"
+          >
+            {t('auth.findEmail.link')}
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link
+            href="/forgot-password"
+            className="font-semibold text-gray-600 hover:text-blue-700 hover:underline"
+          >
+            {t('auth.forgot.link')}
+          </Link>
+        </div>
+
         <p className="mt-4 text-center text-sm text-gray-500">
           {t('auth.noAccount')}{' '}
           <Link href="/signup" className="font-semibold text-blue-600 hover:underline">
