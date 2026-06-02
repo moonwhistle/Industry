@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface MenuItem {
   key: 'home' | 'notice' | 'free' | 'resources' | 'law' | 'news' | 'accident' | 'education' | 'checklist' | 'photos' | 'qna';
@@ -25,6 +27,38 @@ const menus: MenuItem[] = [
 export default function Sidebar() {
   const t = useTranslations('nav');
   const pathname = usePathname();
+  const [isStaff, setIsStaff] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    const refresh = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      if (!userId) {
+        if (!cancelled) setIsStaff(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .single();
+      if (!cancelled) setIsStaff(!!profile?.is_admin);
+    };
+
+    refresh();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      refresh();
+    });
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <aside className="hidden w-56 shrink-0 md:block">
@@ -56,24 +90,28 @@ export default function Sidebar() {
           })}
         </nav>
 
-        <Link
-          href="/admin"
-          className="mt-3 block rounded-lg border border-blue-900 px-3 py-2.5 text-center text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-900 hover:text-white"
-        >
-          {t('adminMenu')}
-        </Link>
-        <Link
-          href="/admin/users"
-          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-        >
-          {t('userManage')}
-        </Link>
-        <Link
-          href="/admin/reports"
-          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-        >
-          {t('reportManage')}
-        </Link>
+        {isStaff && (
+          <>
+            <Link
+              href="/admin"
+              className="mt-3 block rounded-lg border border-blue-900 px-3 py-2.5 text-center text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-900 hover:text-white"
+            >
+              {t('adminMenu')}
+            </Link>
+            <Link
+              href="/admin/users"
+              className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {t('userManage')}
+            </Link>
+            <Link
+              href="/admin/reports"
+              className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {t('reportManage')}
+            </Link>
+          </>
+        )}
       </div>
     </aside>
   );

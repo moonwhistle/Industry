@@ -54,6 +54,7 @@ export interface Profile {
   report_count: number;
   suspended_until: string | null;
   is_admin: boolean;
+  is_super_admin: boolean;
   profile_image: string | null;
   created_at: string;
 }
