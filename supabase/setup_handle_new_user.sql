@@ -58,6 +58,9 @@ begin
     v_nickname := split_part(coalesce(new.email, 'user@local'), '@', 1);
   end if;
 
+  -- 보안: is_admin 은 신규 가입 시 항상 false.
+  -- 사이트 운영진 권한은 별도 마이그레이션 또는 super admin 콘솔로만 부여.
+  -- (예전엔 user_role='관리자' 선택 시 자동 부여되어 권한 상승 취약점이 있었음)
   insert into profiles (
     id,
     email,
@@ -68,7 +71,8 @@ begin
     industry,
     manager_type,
     public_id,
-    is_admin
+    is_admin,
+    is_super_admin
   )
   values (
     new.id,
@@ -80,7 +84,8 @@ begin
     v_industry,
     v_manager_type,
     'USER-' || left(new.id::text, 8),
-    v_user_role = '관리자'
+    false,
+    false
   )
   on conflict (id) do nothing;
 

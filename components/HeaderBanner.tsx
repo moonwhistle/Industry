@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import HeaderAuthArea from './HeaderAuthArea';
 import LanguageSwitcher from './LanguageSwitcher';
 import SearchBar from './SearchBar';
@@ -15,12 +16,18 @@ export default async function HeaderBanner() {
           <HeaderAuthArea />
         </div>
         <div className="flex flex-1 flex-col justify-center">
-          <p className="mb-2 text-base font-medium tracking-wide opacity-90">
-            {t('tagline')}
-          </p>
-          <h1 className="mb-5 text-4xl font-bold tracking-tight">
-            {t('title')}
-          </h1>
+          <Link
+            href="/"
+            aria-label={t('title')}
+            className="group inline-block self-start rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <p className="mb-2 text-base font-medium tracking-wide opacity-90">
+              {t('tagline')}
+            </p>
+            <h1 className="mb-5 text-4xl font-bold tracking-tight group-hover:underline">
+              {t('title')}
+            </h1>
+          </Link>
           <SearchBar />
         </div>
       </div>

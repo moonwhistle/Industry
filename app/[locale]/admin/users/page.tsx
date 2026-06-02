@@ -17,11 +17,11 @@ export default async function AdminUsersPage() {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('is_admin, user_role')
+    .select('is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!currentProfile?.is_admin && currentProfile?.user_role !== '관리자') {
+  if (!currentProfile?.is_admin) {
     redirect({ href: '/admin', locale });
   }
 
