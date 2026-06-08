@@ -9,7 +9,8 @@
     "submitting": "Submitting...",
     "back": "Back",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "staffAuthor": "Staff"
   },
   "header": {
     "tagline": "Safer Sites, Healthier Workers",
@@ -106,7 +107,7 @@
     "subtitle": "View and edit your account details.",
     "editSection": "Edit Profile",
     "infoEmail": "Email",
-    "infoPublicId": "Public ID",
+    "infoPublicId": "User Code",
     "infoJoinedAt": "Joined",
     "infoStatus": "Account Status",
     "infoReports": "Reports",
@@ -177,6 +178,9 @@
     "recentTitle": "Recent Posts",
     "recentSeeAll": "See all",
     "recentEmpty": "No posts yet.",
+    "popularTitle": "Popular This Month",
+    "popularEmpty": "No popular posts recently.",
+    "previewEmpty": "No posts yet.",
     "introBadge": "About the Community",
     "introHeading": "A safer site, built by managers and workers together",
     "introBody1": "The Occupational Safety & Health Community is an information-sharing platform where managers and workers from construction, manufacturing, and other industrial sites communicate openly. It offers Q&A, knowledge sharing, accident cases, near-miss reports, and anonymous tips — helping managers understand workers' real challenges and helping workers understand managers' legal duties and safety standards.",
