@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import type { PostWithAuthor, CommentWithAuthor } from '@/types';
 import AdminContentActions from '@/components/admin/AdminContentActions';
@@ -39,17 +40,21 @@ export default async function PostDetailPage({
   const { data: currentProfile } = userData.user
     ? await supabase
         .from('profiles')
-        .select('is_admin, user_role')
+        .select('is_admin')
         .eq('id', userData.user.id)
         .single()
     : { data: null };
 
   const typedPost = post as PostWithAuthor;
   const typedComments = (comments ?? []) as CommentWithAuthor[];
-  const isAdmin = Boolean(
-    currentProfile?.is_admin || currentProfile?.user_role === '관리자'
-  );
+  // 운영진 판별은 is_admin 단독. user_role='관리자' 는 회원가입에서 누구나
+  // 선택하는 직무값이므로 운영진 권한과 무관 (appoint_staff.sql 동일 원칙).
+  const isAdmin = Boolean(currentProfile?.is_admin);
   const isQnaPost = typedPost.category_slug === 'qna';
+
+  // 운영진 작성 글: 작성자 신원(닉네임/유형/업종)을 모두에게 숨긴다(관리자 포함).
+  const t = await getTranslations('common');
+  const authorProfile = typedPost.hide_author ? null : typedPost.profiles;
 
   return (
     <article className="rounded-2xl bg-white p-8 shadow">
@@ -60,14 +65,16 @@ export default async function PostDetailPage({
           <span>
             작성자:{' '}
             <strong className="text-gray-600">
-              {typedPost.profiles?.nickname ??
-                typedPost.profiles?.public_id ??
-                typedPost.profiles?.email ??
-                '알 수 없음'}
+              {typedPost.hide_author
+                ? t('staffAuthor')
+                : (authorProfile?.nickname ??
+                  authorProfile?.public_id ??
+                  authorProfile?.email ??
+                  '알 수 없음')}
             </strong>
           </span>
-          <span>유형 {typedPost.profiles?.user_role ?? '-'}</span>
-          <span>업종 {typedPost.profiles?.industry ?? '-'}</span>
+          <span>유형 {authorProfile?.user_role ?? '-'}</span>
+          <span>업종 {authorProfile?.industry ?? '-'}</span>
           <span>
             작성일: {new Date(typedPost.created_at).toLocaleString('ko-KR')}
           </span>

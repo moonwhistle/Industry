@@ -1,8 +1,20 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { appointStaff, dismissStaff } from '@/app/actions/staff';
 
-export default function UserActionButtons({ userId }: { userId: string }) {
+export default function UserActionButtons({
+  userId,
+  canManageStaff = false,
+  targetIsAdmin = false,
+  targetIsSuperAdmin = false,
+}: {
+  userId: string;
+  /** 조회자가 최고 운영진일 때만 임명/해임 버튼 노출 */
+  canManageStaff?: boolean;
+  targetIsAdmin?: boolean;
+  targetIsSuperAdmin?: boolean;
+}) {
   const suspendUser = async () => {
     const confirmed = confirm('해당 사용자를 7일 정지하시겠습니까?');
 
@@ -71,6 +83,32 @@ export default function UserActionButtons({ userId }: { userId: string }) {
     location.reload();
   };
 
+  const appoint = async () => {
+    if (!confirm('이 사용자를 사이트 운영진으로 임명하시겠습니까?')) return;
+
+    const res = await appointStaff(userId);
+    if (res?.error) {
+      alert(res.error);
+      return;
+    }
+
+    alert('운영진으로 임명되었습니다.');
+    location.reload();
+  };
+
+  const dismiss = async () => {
+    if (!confirm('이 사용자의 운영진 권한을 해임하시겠습니까?')) return;
+
+    const res = await dismissStaff(userId);
+    if (res?.error) {
+      alert(res.error);
+      return;
+    }
+
+    alert('운영진에서 해임되었습니다.');
+    location.reload();
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -96,6 +134,26 @@ export default function UserActionButtons({ userId }: { userId: string }) {
       >
         복구
       </button>
+
+      {canManageStaff && !targetIsSuperAdmin && (
+        targetIsAdmin ? (
+          <button
+            type="button"
+            onClick={dismiss}
+            className="rounded bg-gray-700 px-2 py-1 text-xs font-bold text-white"
+          >
+            운영진 해임
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={appoint}
+            className="rounded bg-indigo-600 px-2 py-1 text-xs font-bold text-white"
+          >
+            운영진 임명
+          </button>
+        )
+      )}
     </div>
   );
 }

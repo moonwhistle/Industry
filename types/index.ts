@@ -80,8 +80,10 @@ export interface Post {
   accident_type: string | null;
   accident_cause: string | null;
   prevention_plan: string | null;
+  news_subcategory: string | null;
   is_hidden: boolean;
   hidden_reason: string | null;
+  hide_author: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -99,6 +101,7 @@ export interface PostListItem {
   created_at: string;
   view_count: number;
   like_count: number;
+  hide_author: boolean;
   profiles: Pick<Profile, 'nickname' | 'email'> | null;
 }
 

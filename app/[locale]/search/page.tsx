@@ -30,7 +30,7 @@ export default async function SearchPage({
     supabase
       .from('posts')
       .select(
-        'id, title, created_at, view_count, like_count, profiles(nickname, email)'
+        'id, title, created_at, view_count, like_count, hide_author, profiles(nickname, email)'
       )
       .ilike('title', pattern)
       .order('created_at', { ascending: false })
@@ -38,7 +38,7 @@ export default async function SearchPage({
     supabase
       .from('posts')
       .select(
-        'id, title, created_at, view_count, like_count, profiles(nickname, email)'
+        'id, title, created_at, view_count, like_count, hide_author, profiles(nickname, email)'
       )
       .ilike('content', pattern)
       .order('created_at', { ascending: false })
@@ -55,7 +55,8 @@ export default async function SearchPage({
     const item = row as unknown as PostListItem;
     if (seen.has(item.id)) continue;
     seen.add(item.id);
-    merged.push(item);
+    // 운영진 작성 글은 작성자 정보를 응답에서 제거(유출 방지). 표시는 '운영진' 라벨.
+    merged.push(item.hide_author ? { ...item, profiles: null } : item);
   }
   merged.sort(
     (a, b) =>

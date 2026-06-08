@@ -1,7 +1,10 @@
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import type { PostListItem } from '@/types';
 
 export default function PostList({ posts }: { posts: PostListItem[] }) {
+  const t = useTranslations('common');
+
   if (posts.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-12 text-center text-gray-400">
@@ -34,7 +37,9 @@ export default function PostList({ posts }: { posts: PostListItem[] }) {
           </div>
 
           <div className="col-span-2 truncate text-gray-500">
-            {post.profiles?.nickname ?? post.profiles?.email ?? '알 수 없음'}
+            {post.hide_author
+              ? t('staffAuthor')
+              : (post.profiles?.nickname ?? post.profiles?.email ?? '알 수 없음')}
           </div>
 
           <div className="col-span-2 text-gray-400">

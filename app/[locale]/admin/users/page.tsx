@@ -17,13 +17,15 @@ export default async function AdminUsersPage() {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, is_super_admin')
     .eq('id', user.id)
     .single();
 
   if (!currentProfile?.is_admin) {
     redirect({ href: '/admin', locale });
   }
+
+  const canManageStaff = Boolean(currentProfile?.is_super_admin);
 
   const { data: users } = await supabase
     .from('profiles')
@@ -38,6 +40,8 @@ export default async function AdminUsersPage() {
       account_status,
       report_count,
       suspended_until,
+      is_admin,
+      is_super_admin,
       created_at
     `
     )
@@ -50,7 +54,7 @@ export default async function AdminUsersPage() {
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <div className="min-w-[980px]">
           <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] bg-gray-100 px-4 py-3 text-sm font-bold text-gray-600">
-            <div className="col-span-2">공개 아이디</div>
+            <div className="col-span-2">유저 코드</div>
             <div className="col-span-2">닉네임</div>
             <div className="col-span-1">유형</div>
             <div className="col-span-1">업종</div>
@@ -71,6 +75,15 @@ export default async function AdminUsersPage() {
               </div>
               <div className="col-span-2 font-semibold text-gray-900">
                 {profile.nickname}
+                {profile.is_super_admin ? (
+                  <span className="ml-1 rounded bg-purple-100 px-1 text-xs font-bold text-purple-700">
+                    최고운영진
+                  </span>
+                ) : profile.is_admin ? (
+                  <span className="ml-1 rounded bg-indigo-100 px-1 text-xs font-bold text-indigo-700">
+                    운영진
+                  </span>
+                ) : null}
               </div>
               <div className="col-span-1">{profile.user_role}</div>
               <div className="col-span-1">{profile.industry}</div>
@@ -83,7 +96,12 @@ export default async function AdminUsersPage() {
                 {new Date(profile.created_at).toLocaleDateString('ko-KR')}
               </div>
               <div className="col-span-2">
-                <UserActionButtons userId={profile.id} />
+                <UserActionButtons
+                  userId={profile.id}
+                  canManageStaff={canManageStaff}
+                  targetIsAdmin={profile.is_admin}
+                  targetIsSuperAdmin={profile.is_super_admin}
+                />
               </div>
             </div>
           ))}

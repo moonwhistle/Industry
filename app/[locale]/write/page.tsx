@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPost } from '@/app/actions/posts';
+import { createClient } from '@/lib/supabase/client';
+import { NEWS_SUBCATEGORIES } from '@/lib/news';
 import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
 
 const CATEGORIES = [
@@ -18,11 +20,82 @@ const CATEGORIES = [
   { slug: 'qna', name: 'Q&A' },
 ];
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 function WriteForm() {
   const searchParams = useSearchParams();
   const [category, setCategory] = useState(searchParams.get('category') ?? 'free');
+  const [newsSub, setNewsSub] = useState<string>('etc');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 이미지 업로드 상태
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadImage = async (file: File) => {
+    setUploadError('');
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setUploadError('이미지 파일(JPG/PNG/WEBP/GIF)만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setUploadError('이미지 용량은 최대 5MB까지 가능합니다.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setUploadError('로그인이 필요합니다.');
+        return;
+      }
+
+      const ext = file.type.split('/')[1] ?? 'png';
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('post-images')
+        .upload(path, file, { contentType: file.type });
+
+      if (uploadErr) {
+        setUploadError(`업로드 실패: ${uploadErr.message}`);
+        return;
+      }
+
+      const { data } = supabase.storage.from('post-images').getPublicUrl(path);
+      setImageUrl(data.publicUrl);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadImage(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadImage(file);
+  };
+
+  const removeImage = () => {
+    setImageUrl(null);
+    setUploadError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,6 +104,8 @@ function WriteForm() {
 
     const fd = new FormData(e.currentTarget);
     fd.set('category_slug', category);
+    fd.set('image_url', imageUrl ?? '');
+    fd.set('news_subcategory', category === 'news' ? newsSub : '');
 
     const result = await createPost(fd);
     if (result?.error) {
@@ -63,6 +138,25 @@ function WriteForm() {
           </select>
         </div>
 
+        {category === 'news' && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              뉴스 분류
+            </label>
+            <select
+              value={newsSub}
+              onChange={(e) => setNewsSub(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              {NEWS_SUBCATEGORIES.map((s) => (
+                <option key={s.slug} value={s.slug}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             제목
@@ -90,14 +184,64 @@ function WriteForm() {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            이미지 URL (선택)
+            이미지 (선택, 최대 5MB)
           </label>
+
+          {imageUrl ? (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt="첨부 이미지 미리보기"
+                className="max-h-64 rounded-lg border border-gray-200 object-contain"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute right-2 top-2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white hover:bg-black/80"
+              >
+                제거
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors ${
+                isDragging
+                  ? 'border-blue-500 bg-blue-50 text-blue-600'
+                  : 'border-gray-300 text-gray-400 hover:border-blue-400 hover:bg-gray-50'
+              }`}
+            >
+              {uploading ? (
+                <span>업로드 중...</span>
+              ) : (
+                <>
+                  <span className="font-medium">
+                    이미지를 끌어다 놓거나 클릭해서 선택하세요
+                  </span>
+                  <span className="mt-1 text-xs">JPG / PNG / WEBP / GIF · 최대 5MB</span>
+                </>
+              )}
+            </div>
+          )}
+
           <input
-            name="image_url"
-            type="url"
-            placeholder="https://..."
-            className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none"
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES.join(',')}
+            onChange={handleFileInput}
+            className="hidden"
           />
+
+          {uploadError && (
+            <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+          )}
         </div>
 
         {error && (
@@ -107,7 +251,7 @@ function WriteForm() {
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploading}
             className="rounded-lg bg-blue-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800 disabled:opacity-50"
           >
             {loading ? '등록 중...' : '등록하기'}
