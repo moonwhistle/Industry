@@ -30,7 +30,24 @@ export default async function SearchPage({
     supabase
       .from('posts')
       .select(
-        'id, title, created_at, view_count, like_count, hide_author, profiles(nickname, email)'
+        `
+        id,
+        title,
+        created_at,
+        view_count,
+        like_count,
+        comment_count,
+        hide_author,
+        profiles (
+          nickname,
+          email,
+          public_id,
+          user_code,
+          user_role,
+          job_role,
+          manager_type
+        )
+      `
       )
       .ilike('title', pattern)
       .order('created_at', { ascending: false })
@@ -38,7 +55,24 @@ export default async function SearchPage({
     supabase
       .from('posts')
       .select(
-        'id, title, created_at, view_count, like_count, hide_author, profiles(nickname, email)'
+        `
+        id,
+        title,
+        created_at,
+        view_count,
+        like_count,
+        comment_count,
+        hide_author,
+        profiles (
+          nickname,
+          email,
+          public_id,
+          user_code,
+          user_role,
+          job_role,
+          manager_type
+        )
+      `
       )
       .ilike('content', pattern)
       .order('created_at', { ascending: false })

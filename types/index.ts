@@ -6,11 +6,14 @@ export type ManagerType =
   | '현장소장'
   | '관리감독자'
   | '안전보건총괄책임자'
-  | '안전보건관리책임자';
+  | '안전보건관리책임자'
+  | '기타 관리자';
 
 export type QnaStatus = '답변대기' | '답변완료';
 export type ReportStatus = '접수' | '처리중' | '처리완료';
 export type AccountStatus = 'active' | 'suspended' | 'banned';
+export type SiteRole = 'member' | 'staff' | 'owner';
+export type NewsGroup = '전체' | '건설업' | '제조업' | '조선·운송업' | '기타';
 export type AnswerOpinionType =
   | '이의제기'
   | '추가의견'
@@ -42,18 +45,30 @@ export type CategorySlug =
 
 export interface Profile {
   id: string;
+  login_id: string | null;
   email: string | null;
   nickname: string;
   nationality: string | null;
   age: number | null;
+  birth_date: string | null;
+  nationality_code: string | null;
+  nationality_name: string | null;
   user_role: UserRole;
   industry: Industry;
+  job_role: string | null;
   manager_type: ManagerType | null;
   public_id: string | null;
+  user_code: string | null;
+  site_role: SiteRole;
+  can_manage_site: boolean;
+  can_grant_admin: boolean;
   account_status: AccountStatus;
   report_count: number;
   suspended_until: string | null;
   is_admin: boolean;
+  is_online: boolean;
+  last_seen_at: string | null;
+  last_login_at: string | null;
   is_super_admin: boolean;
   profile_image: string | null;
   created_at: string;
@@ -76,6 +91,7 @@ export interface Post {
   file_url: string | null;
   view_count: number;
   like_count: number;
+  comment_count: number;
   qna_status: QnaStatus;
   accident_type: string | null;
   accident_cause: string | null;
@@ -91,7 +107,14 @@ export interface Post {
 export interface PostWithAuthor extends Post {
   profiles: Pick<
     Profile,
-    'nickname' | 'email' | 'public_id' | 'user_role' | 'industry'
+    | 'nickname'
+    | 'email'
+    | 'public_id'
+    | 'user_code'
+    | 'user_role'
+    | 'industry'
+    | 'job_role'
+    | 'manager_type'
   > | null;
 }
 
@@ -101,8 +124,12 @@ export interface PostListItem {
   created_at: string;
   view_count: number;
   like_count: number;
+  comment_count: number;
   hide_author: boolean;
-  profiles: Pick<Profile, 'nickname' | 'email'> | null;
+  profiles: Pick<
+    Profile,
+    'nickname' | 'email' | 'public_id' | 'user_code' | 'user_role' | 'job_role' | 'manager_type'
+  > | null;
 }
 
 export interface RecentPostItem {
@@ -125,7 +152,21 @@ export interface Comment {
 }
 
 export interface CommentWithAuthor extends Comment {
-  profiles: Pick<Profile, 'nickname' | 'email' | 'public_id' | 'user_role'> | null;
+  profiles: Pick<
+    Profile,
+    'nickname' | 'email' | 'public_id' | 'user_code' | 'user_role' | 'job_role' | 'manager_type'
+  > | null;
+}
+
+export interface PostAttachment {
+  id: number;
+  post_id: number;
+  file_url: string;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  storage_path: string | null;
+  created_at: string;
 }
 
 export interface Answer {
@@ -156,13 +197,23 @@ export interface AnswerOpinion {
 }
 
 export interface AnswerOpinionWithAuthor extends AnswerOpinion {
-  profiles: Pick<Profile, 'nickname' | 'email' | 'public_id' | 'user_role'> | null;
+  profiles: Pick<
+    Profile,
+    'nickname' | 'email' | 'public_id' | 'user_code' | 'user_role' | 'job_role' | 'manager_type'
+  > | null;
 }
 
 export interface AnswerWithAuthor extends Answer {
   profiles: Pick<
     Profile,
-    'nickname' | 'email' | 'public_id' | 'user_role' | 'industry'
+    | 'nickname'
+    | 'email'
+    | 'public_id'
+    | 'user_code'
+    | 'user_role'
+    | 'industry'
+    | 'job_role'
+    | 'manager_type'
   > | null;
   answer_opinions: AnswerOpinionWithAuthor[];
 }

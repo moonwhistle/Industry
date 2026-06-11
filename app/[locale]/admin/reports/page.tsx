@@ -41,11 +41,11 @@ export default async function AdminReportsPage() {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('is_admin, user_role')
+    .select('is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!currentProfile?.is_admin && currentProfile?.user_role !== '관리자') {
+  if (!currentProfile?.is_admin) {
     redirect({ href: '/admin', locale });
     return null;
   }
@@ -94,9 +94,7 @@ export default async function AdminReportsPage() {
                   targetType: t(`targetType_${report.target_type}`),
                 })}
               </span>
-              <span>
-                {t('targetIdLabel', { targetId: report.target_id })}
-              </span>
+              <span>{t('targetIdLabel', { targetId: report.target_id })}</span>
               <span>
                 {t('createdAtLabel', {
                   createdAt: new Date(report.created_at).toLocaleString(

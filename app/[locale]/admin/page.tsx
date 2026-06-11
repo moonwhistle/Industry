@@ -5,7 +5,9 @@ import { Link, redirect } from '@/i18n/navigation';
 export default async function AdminPage() {
   const supabase = await createClient();
   const locale = await getLocale();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect({ href: '/login', locale });
@@ -31,8 +33,7 @@ export default async function AdminPage() {
     <div className="rounded-2xl bg-white p-8 shadow">
       <h1 className="mb-4 text-2xl font-bold text-blue-900">관리자 메뉴</h1>
       <p className="text-gray-600">
-        안녕하세요,{' '}
-        <strong>{profile.nickname}</strong>{' '}
+        안녕하세요, <strong>{profile.nickname}</strong>{' '}
         {profile.is_super_admin ? '최고 운영진' : '운영진'}님.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">

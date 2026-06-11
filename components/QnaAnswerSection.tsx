@@ -4,6 +4,7 @@ import AdminContentActions from './admin/AdminContentActions';
 import AnswerForm from './forms/AnswerForm';
 import AnswerOpinionForm from './forms/AnswerOpinionForm';
 import ReportButton from './ReportButton';
+import { getDisplayRole } from '@/lib/getDisplayRole';
 import SelectAnswerButton from './SelectAnswerButton';
 
 type QnaAnswerSectionProps = {
@@ -37,7 +38,10 @@ export default async function QnaAnswerSection({
           nickname,
           email,
           public_id,
+          user_code,
           user_role,
+          job_role,
+          manager_type,
           industry
         ),
         answer_opinions (
@@ -55,7 +59,10 @@ export default async function QnaAnswerSection({
             nickname,
             email,
             public_id,
-            user_role
+            user_code,
+            user_role,
+            job_role,
+            manager_type
           )
         )
       `
@@ -68,13 +75,11 @@ export default async function QnaAnswerSection({
   const { data: currentProfile } = userData.user
     ? await supabase
         .from('profiles')
-        .select('is_admin, user_role')
+        .select('is_admin')
         .eq('id', userData.user.id)
         .single()
     : { data: null };
-  const isAdmin = Boolean(
-    currentProfile?.is_admin || currentProfile?.user_role === '관리자'
-  );
+  const isAdmin = Boolean(currentProfile?.is_admin);
   const isQuestionAuthor = Boolean(
     userData.user && questionAuthorId && userData.user.id === questionAuthorId
   );
@@ -108,13 +113,14 @@ export default async function QnaAnswerSection({
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="font-bold text-blue-900">
                 {answer.profiles?.nickname ??
+                  answer.profiles?.user_code ??
                   answer.profiles?.public_id ??
                   answer.profiles?.email ??
                   '알 수 없음'}
               </span>
 
               <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                {answer.profiles?.user_role ?? '사용자'}
+                {getDisplayRole(answer.profiles)}
               </span>
 
               {answer.is_admin_answer && (
@@ -188,13 +194,14 @@ export default async function QnaAnswerSection({
 
                       <span className="text-sm font-semibold text-gray-800">
                         {opinion.profiles?.nickname ??
+                          opinion.profiles?.user_code ??
                           opinion.profiles?.public_id ??
                           opinion.profiles?.email ??
                           '알 수 없음'}
                       </span>
 
                       <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                        {opinion.profiles?.user_role ?? '사용자'}
+                        {getDisplayRole(opinion.profiles)}
                       </span>
 
                       <span className="text-xs text-gray-400">

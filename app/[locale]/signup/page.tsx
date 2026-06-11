@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { signUp } from '@/app/actions/auth';
 import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
+import { countries } from '@/lib/countries';
 import type { ManagerType } from '@/types';
 
 const MANAGER_TYPES: ManagerType[] = [
@@ -14,6 +15,7 @@ const MANAGER_TYPES: ManagerType[] = [
   '관리감독자',
   '안전보건총괄책임자',
   '안전보건관리책임자',
+  '기타 관리자',
 ];
 
 export default function SignupPage() {
@@ -41,6 +43,15 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <CommunityPolicyNotice />
+
+          <Field label="로그인 아이디">
+            <input
+              name="login_id"
+              required
+              placeholder="로그인에 사용할 아이디"
+              className={inputClass}
+            />
+          </Field>
 
           <Field label={t('auth.email')}>
             <input
@@ -72,23 +83,23 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label={t('auth.nationality')}>
+          <Field label="생년월일">
             <input
-              name="nationality"
-              placeholder={t('auth.nationalityPlaceholder')}
+              name="birth_date"
+              type="date"
+              required
               className={inputClass}
             />
           </Field>
 
-          <Field label={t('auth.age')}>
-            <input
-              name="age"
-              type="number"
-              min={15}
-              max={80}
-              placeholder={t('auth.age')}
-              className={inputClass}
-            />
+          <Field label="국적">
+            <select name="nationality_code" required defaultValue="KR" className={inputClass}>
+              {countries.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
           </Field>
 
           <Field label={t('auth.role')}>
@@ -120,6 +131,16 @@ export default function SignupPage() {
                   <option key={mt} value={mt}>{mt}</option>
                 ))}
               </select>
+            </Field>
+          )}
+
+          {userRole === '근로자' && (
+            <Field label="작업 분야">
+              <input
+                name="job_role"
+                placeholder="예: 형틀, 철근, 설비, 생산, 물류 등"
+                className={inputClass}
+              />
             </Field>
           )}
 
