@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import PostList from '@/components/PostList';
-import type { PostListItem, CategorySlug } from '@/types';
+import type { PostListItem, CategorySlug, NewsGroup } from '@/types';
 
 const categoryNameMap: Record<CategorySlug, string> = {
   notice: '공지사항',
@@ -16,6 +16,15 @@ const categoryNameMap: Record<CategorySlug, string> = {
   qna: 'Q&A',
 };
 
+const sortOptions = [
+  { label: '최신순', value: 'latest' },
+  { label: '오래된순', value: 'oldest' },
+  { label: '좋아요순', value: 'likes' },
+  { label: '조회수순', value: 'views' },
+];
+
+const newsGroups: NewsGroup[] = ['전체', '건설업', '제조업', '조선·운송업', '기타'];
+
 export async function generateMetadata({
   params,
 }: {
@@ -28,19 +37,59 @@ export async function generateMetadata({
 
 export default async function BoardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ sort?: string; group?: string }>;
 }) {
   const { category } = await params;
+  const { sort, group } = await searchParams;
   const categoryName = categoryNameMap[category as CategorySlug] ?? '통합게시판';
+  const selectedSort = sort ?? 'latest';
+  const selectedGroup = (group ?? '전체') as NewsGroup;
 
   const supabase = await createClient();
 
-  const { data: posts } = await supabase
+  let query = supabase
     .from('posts')
-    .select('id, title, created_at, view_count, like_count, profiles(nickname, email)')
+    .select(
+      `
+      id,
+      title,
+      created_at,
+      view_count,
+      like_count,
+      comment_count,
+      is_author_hidden,
+      profiles (
+        nickname,
+        email,
+        public_id,
+        user_code,
+        user_role,
+        job_role,
+        manager_type
+      )
+    `
+    )
     .eq('category_slug', category)
-    .order('created_at', { ascending: false });
+    .eq('is_hidden', false);
+
+  if (category === 'news' && selectedGroup !== '전체') {
+    query = query.eq('news_group', selectedGroup);
+  }
+
+  if (selectedSort === 'oldest') {
+    query = query.order('created_at', { ascending: true });
+  } else if (selectedSort === 'likes') {
+    query = query.order('like_count', { ascending: false });
+  } else if (selectedSort === 'views') {
+    query = query.order('view_count', { ascending: false });
+  } else {
+    query = query.order('created_at', { ascending: false });
+  }
+
+  const { data: posts } = await query;
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow">
@@ -52,6 +101,40 @@ export default async function BoardPage({
         >
           글쓰기
         </Link>
+      </div>
+
+      {category === 'news' && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {newsGroups.map((newsGroup) => (
+            <Link
+              key={newsGroup}
+              href={`/board/news?group=${encodeURIComponent(newsGroup)}&sort=${selectedSort}`}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                selectedGroup === newsGroup
+                  ? 'bg-blue-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+            >
+              {newsGroup}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        {sortOptions.map((option) => (
+          <Link
+            key={option.value}
+            href={`/board/${category}?group=${encodeURIComponent(selectedGroup)}&sort=${option.value}`}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              selectedSort === option.value
+                ? 'bg-blue-900 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+            }`}
+          >
+            {option.label}
+          </Link>
+        ))}
       </div>
 
       <PostList posts={(posts ?? []) as unknown as PostListItem[]} />
