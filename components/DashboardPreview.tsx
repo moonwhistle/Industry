@@ -14,7 +14,7 @@ const externalCards = [
   {
     title: '중대재해 사이렌',
     description: '중대재해 발생 알림 및 예방자료 확인',
-    href: 'https://labor.moel.go.kr/sasttc/cmmt/bbs_srn_list.do?seCdVal=B1',
+    href: 'https://portal.kosha.or.kr/archive/imprtnDsstrAlrame/CSADV50000/CSADV50000M01',
     badge: '긴급',
   },
   {
