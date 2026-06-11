@@ -1,0 +1,18 @@
+export const countries = [
+  { code: 'KR', name: '대한민국' },
+  { code: 'MM', name: '미얀마' },
+  { code: 'CN', name: '중국' },
+  { code: 'VN', name: '베트남' },
+  { code: 'TH', name: '태국' },
+  { code: 'UZ', name: '우즈베키스탄' },
+  { code: 'NP', name: '네팔' },
+  { code: 'KH', name: '캄보디아' },
+  { code: 'PH', name: '필리핀' },
+  { code: 'ID', name: '인도네시아' },
+  { code: 'LK', name: '스리랑카' },
+  { code: 'MN', name: '몽골' },
+  { code: 'BD', name: '방글라데시' },
+  { code: 'PK', name: '파키스탄' },
+  { code: 'IN', name: '인도' },
+  { code: 'OTHER', name: '기타' },
+];
