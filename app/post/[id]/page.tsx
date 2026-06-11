@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import type { PostWithAuthor, CommentWithAuthor } from '@/types';
+import type { PostWithAuthor, CommentWithAuthor, PostAttachment } from '@/types';
 import AdminContentActions from '@/components/admin/AdminContentActions';
 import LikeButton from '@/components/LikeButton';
 import QnaAnswerSection from '@/components/QnaAnswerSection';
 import ReportButton from '@/components/ReportButton';
 import ShareButton from '@/components/ShareButton';
+import { getDisplayRole } from '@/lib/getDisplayRole';
 import CommentSection from './CommentSection';
 
 export default async function PostDetailPage({
@@ -22,15 +23,27 @@ export default async function PostDetailPage({
 
   await supabase.rpc('increment_view_count', { post_id_input: postId });
 
-  const [{ data: post }, { data: comments }, { data: userData }] = await Promise.all([
+  const [
+    { data: post },
+    { data: comments },
+    { data: attachments },
+    { data: userData },
+  ] = await Promise.all([
     supabase
       .from('posts')
-      .select('*, profiles(nickname, email, public_id, user_role, industry)')
+      .select(
+        '*, profiles(nickname, email, public_id, user_code, user_role, industry, job_role, manager_type)'
+      )
       .eq('id', postId)
       .single(),
     supabase
       .from('comments')
-      .select('*, profiles(nickname, email, public_id, user_role)')
+      .select('*, profiles(nickname, email, public_id, user_code, user_role, job_role, manager_type)')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('post_attachments')
+      .select('*')
       .eq('post_id', postId)
       .order('created_at', { ascending: true }),
     supabase.auth.getUser(),
@@ -48,6 +61,7 @@ export default async function PostDetailPage({
 
   const typedPost = post as PostWithAuthor;
   const typedComments = (comments ?? []) as CommentWithAuthor[];
+  const typedAttachments = (attachments ?? []) as PostAttachment[];
   const isAdmin = Boolean(
     currentProfile?.is_admin || currentProfile?.user_role === '관리자'
   );
@@ -65,13 +79,16 @@ export default async function PostDetailPage({
           <span>
             작성자:{' '}
             <strong className="text-gray-600">
-              {typedPost.profiles?.nickname ??
-                typedPost.profiles?.public_id ??
-                typedPost.profiles?.email ??
-                '알 수 없음'}
+              {typedPost.is_author_hidden
+                ? '운영진'
+                : typedPost.profiles?.nickname ??
+                  typedPost.profiles?.user_code ??
+                  typedPost.profiles?.public_id ??
+                  typedPost.profiles?.email ??
+                  '알 수 없음'}
             </strong>
           </span>
-          <span>유형 {typedPost.profiles?.user_role ?? '-'}</span>
+          <span>역할 {getDisplayRole(typedPost.profiles)}</span>
           <span>업종 {typedPost.profiles?.industry ?? '-'}</span>
           <span>
             작성일: {new Date(typedPost.created_at).toLocaleString('ko-KR')}
@@ -129,6 +146,36 @@ export default async function PostDetailPage({
         >
           📎 첨부파일 다운로드
         </a>
+      )}
+
+      {typedAttachments.length > 0 && !typedPost.is_hidden && (
+        <section className="mt-8 rounded-2xl bg-gray-50 p-5">
+          <h2 className="mb-4 text-lg font-bold text-gray-900">첨부파일</h2>
+
+          <div className="space-y-4">
+            {typedAttachments.map((file) => (
+              <div key={file.id} className="rounded-xl bg-white p-4">
+                {file.file_type?.startsWith('image/') && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={file.file_url}
+                    alt={file.file_name}
+                    className="mb-3 max-h-[500px] rounded-xl object-cover"
+                  />
+                )}
+
+                <a
+                  href={file.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-700 hover:underline"
+                >
+                  다운로드: {file.file_name}
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {isAdmin && <AdminContentActions targetType="post" targetId={typedPost.id} />}
