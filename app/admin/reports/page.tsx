@@ -1,11 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { isSiteAdminProfile } from '@/lib/isSiteAdminProfile';
 
 type ReportProfile = {
   public_id: string | null;
+  user_code?: string | null;
   nickname: string | null;
   user_role?: string | null;
   industry?: string | null;
+  job_role?: string | null;
+  manager_type?: string | null;
+  site_role?: string | null;
   account_status?: string | null;
   report_count?: number | null;
 };
@@ -32,11 +37,11 @@ export default async function AdminReportsPage() {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('is_admin, user_role')
+    .select('site_role, can_manage_site, is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!currentProfile?.is_admin && currentProfile?.user_role !== '관리자') {
+  if (!isSiteAdminProfile(currentProfile)) {
     redirect('/admin');
   }
 
@@ -53,14 +58,19 @@ export default async function AdminReportsPage() {
       created_at,
       reported_user:profiles!reports_reported_user_id_fkey (
         public_id,
+        user_code,
         nickname,
         user_role,
         industry,
+        job_role,
+        manager_type,
+        site_role,
         account_status,
         report_count
       ),
       reporter:profiles!reports_reporter_id_fkey (
         public_id,
+        user_code,
         nickname
       )
     `
@@ -90,7 +100,8 @@ export default async function AdminReportsPage() {
               <p>
                 <strong>신고 대상 사용자:</strong>{' '}
                 {report.reported_user?.nickname} /{' '}
-                {report.reported_user?.public_id}
+                {report.reported_user?.user_code ??
+                  report.reported_user?.public_id}
               </p>
               <p>
                 <strong>사용자 유형:</strong>{' '}
@@ -102,12 +113,16 @@ export default async function AdminReportsPage() {
                 {report.reported_user?.account_status}
               </p>
               <p>
+                <strong>사이트 권한:</strong>{' '}
+                {report.reported_user?.site_role}
+              </p>
+              <p>
                 <strong>누적 신고 수:</strong>{' '}
                 {report.reported_user?.report_count}
               </p>
               <p>
                 <strong>신고자:</strong> {report.reporter?.nickname} /{' '}
-                {report.reporter?.public_id}
+                {report.reporter?.user_code ?? report.reporter?.public_id}
               </p>
             </div>
 

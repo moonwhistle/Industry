@@ -7,6 +7,7 @@ import QnaAnswerSection from '@/components/QnaAnswerSection';
 import ReportButton from '@/components/ReportButton';
 import ShareButton from '@/components/ShareButton';
 import { getDisplayRole } from '@/lib/getDisplayRole';
+import { isSiteAdminProfile } from '@/lib/isSiteAdminProfile';
 import CommentSection from './CommentSection';
 
 export default async function PostDetailPage({
@@ -54,7 +55,7 @@ export default async function PostDetailPage({
   const { data: currentProfile } = userData.user
     ? await supabase
         .from('profiles')
-        .select('is_admin, user_role')
+        .select('site_role, can_manage_site, is_admin')
         .eq('id', userData.user.id)
         .single()
     : { data: null };
@@ -62,9 +63,7 @@ export default async function PostDetailPage({
   const typedPost = post as PostWithAuthor;
   const typedComments = (comments ?? []) as CommentWithAuthor[];
   const typedAttachments = (attachments ?? []) as PostAttachment[];
-  const isAdmin = Boolean(
-    currentProfile?.is_admin || currentProfile?.user_role === '관리자'
-  );
+  const isAdmin = isSiteAdminProfile(currentProfile);
   const isQnaPost = typedPost.category_slug === 'qna';
   const postUrl = process.env.NEXT_PUBLIC_SITE_URL
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/post/${typedPost.id}`

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { isSiteAdminProfile } from '@/lib/isSiteAdminProfile';
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -10,11 +11,11 @@ export default async function AdminPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('user_role, nickname, is_admin')
+    .select('nickname, site_role, can_manage_site, is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.is_admin && profile?.user_role !== '관리자') {
+  if (!isSiteAdminProfile(profile)) {
     return (
       <div className="rounded-2xl bg-white p-8 shadow text-center">
         <p className="text-lg font-semibold text-red-600">접근 권한이 없습니다.</p>
