@@ -28,7 +28,7 @@ export default async function AdminPage() {
     <div className="rounded-2xl bg-white p-8 shadow">
       <h1 className="mb-4 text-2xl font-bold text-blue-900">관리자 메뉴</h1>
       <p className="text-gray-600">
-        안녕하세요, <strong>{profile.nickname}</strong> 관리자님.
+        안녕하세요, <strong>{profile?.nickname ?? '운영진'}</strong> 관리자님.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
