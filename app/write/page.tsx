@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPost } from '@/app/actions/posts';
 import CommunityPolicyNotice from '@/components/CommunityPolicyNotice';
+import MultiFileDropUpload, { type UploadedFile } from '@/components/MultiFileDropUpload';
+import { createClient } from '@/lib/supabase/client';
 
 const CATEGORIES = [
   { slug: 'notice', name: '공지사항' },
@@ -21,8 +23,41 @@ const CATEGORIES = [
 function WriteForm() {
   const searchParams = useSearchParams();
   const [category, setCategory] = useState(searchParams.get('category') ?? 'free');
+  const [newsGroup, setNewsGroup] = useState('전체');
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [canHideAuthor, setCanHideAuthor] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(async ({ data: userData }) => {
+      if (!userData.user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('site_role, can_manage_site, is_admin')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (!active) return;
+
+      setCanHideAuthor(
+        Boolean(
+          profile?.site_role === 'owner' ||
+            profile?.site_role === 'staff' ||
+            profile?.can_manage_site ||
+            profile?.is_admin
+        )
+      );
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,6 +66,8 @@ function WriteForm() {
 
     const fd = new FormData(e.currentTarget);
     fd.set('category_slug', category);
+    fd.set('news_group', newsGroup);
+    fd.set('attachments', JSON.stringify(attachments));
 
     const result = await createPost(fd);
     if (result?.error) {
@@ -63,6 +100,25 @@ function WriteForm() {
           </select>
         </div>
 
+        {category === 'news' && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              뉴스 분류
+            </label>
+            <select
+              value={newsGroup}
+              onChange={(e) => setNewsGroup(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="전체">전체</option>
+              <option value="건설업">건설업</option>
+              <option value="제조업">제조업</option>
+              <option value="조선·운송업">조선·운송업</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             제목
@@ -88,17 +144,21 @@ function WriteForm() {
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            이미지 URL (선택)
+        <MultiFileDropUpload onUploaded={setAttachments} />
+
+        <input
+          type="hidden"
+          name="attachments"
+          value={JSON.stringify(attachments)}
+          readOnly
+        />
+
+        {canHideAuthor && (
+          <label className="flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+            <input name="is_author_hidden" type="checkbox" />
+            운영진 글 작성 시 작성자를 운영진으로 표시
           </label>
-          <input
-            name="image_url"
-            type="url"
-            placeholder="https://..."
-            className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
+        )}
 
         {error && (
           <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>
