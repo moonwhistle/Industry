@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { PostWithAuthor, CommentWithAuthor } from '@/types';
 import AdminContentActions from '@/components/admin/AdminContentActions';
+import LikeButton from '@/components/LikeButton';
 import QnaAnswerSection from '@/components/QnaAnswerSection';
 import ReportButton from '@/components/ReportButton';
+import ShareButton from '@/components/ShareButton';
 import CommentSection from './CommentSection';
 
 export default async function PostDetailPage({
@@ -50,6 +52,9 @@ export default async function PostDetailPage({
     currentProfile?.is_admin || currentProfile?.user_role === '관리자'
   );
   const isQnaPost = typedPost.category_slug === 'qna';
+  const postUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/post/${typedPost.id}`
+    : undefined;
 
   return (
     <article className="rounded-2xl bg-white p-8 shadow">
@@ -87,6 +92,11 @@ export default async function PostDetailPage({
             관리자에 의해 숨김 처리된 게시글입니다.
           </p>
         )}
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <LikeButton postId={typedPost.id} initialCount={typedPost.like_count ?? 0} />
+          <ShareButton title={typedPost.title} url={postUrl} />
+        </div>
       </div>
 
       {typedPost.image_url && !typedPost.is_hidden && (
