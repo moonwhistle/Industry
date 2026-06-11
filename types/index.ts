@@ -69,6 +69,7 @@ export interface Profile {
   is_online: boolean;
   last_seen_at: string | null;
   last_login_at: string | null;
+  is_super_admin: boolean;
   profile_image: string | null;
   created_at: string;
 }
@@ -95,10 +96,10 @@ export interface Post {
   accident_type: string | null;
   accident_cause: string | null;
   prevention_plan: string | null;
+  news_subcategory: string | null;
   is_hidden: boolean;
   hidden_reason: string | null;
-  is_author_hidden: boolean;
-  news_group: NewsGroup;
+  hide_author: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -124,7 +125,7 @@ export interface PostListItem {
   view_count: number;
   like_count: number;
   comment_count: number;
-  is_author_hidden: boolean;
+  hide_author: boolean;
   profiles: Pick<
     Profile,
     'nickname' | 'email' | 'public_id' | 'user_code' | 'user_role' | 'job_role' | 'manager_type'

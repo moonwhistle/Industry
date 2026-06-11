@@ -1,0 +1,55 @@
+import { getLocale } from 'next-intl/server';
+import { createClient } from '@/lib/supabase/server';
+import { Link, redirect } from '@/i18n/navigation';
+
+export default async function AdminPage() {
+  const supabase = await createClient();
+  const locale = await getLocale();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect({ href: '/login', locale });
+    return null;
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('nickname, is_admin, is_super_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    return (
+      <div className="rounded-2xl bg-white p-8 shadow text-center">
+        <p className="text-lg font-semibold text-red-600">접근 권한이 없습니다.</p>
+        <p className="mt-2 text-sm text-gray-500">사이트 운영진만 접근할 수 있습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-8 shadow">
+      <h1 className="mb-4 text-2xl font-bold text-blue-900">관리자 메뉴</h1>
+      <p className="text-gray-600">
+        안녕하세요, <strong>{profile.nickname}</strong>{' '}
+        {profile.is_super_admin ? '최고 운영진' : '운영진'}님.
+      </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          href="/admin/users"
+          className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+        >
+          회원 관리
+        </Link>
+        <Link
+          href="/admin/reports"
+          className="rounded-lg border border-blue-900 px-4 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-50"
+        >
+          신고 관리
+        </Link>
+      </div>
+    </div>
+  );
+}

@@ -1,30 +1,70 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/i18n/navigation';
+import { createClient } from '@/lib/supabase/client';
 
-const menus = [
-  { name: '홈', href: '/' },
-  { name: '공지사항', href: '/board/notice' },
-  { name: '자유게시판', href: '/board/free' },
-  { name: '안전보건 자료실', href: '/board/resources' },
-  { name: '법령/규정', href: '/board/law' },
-  { name: '산업안전 뉴스', href: '/board/news' },
-  { name: '사고사례 공유', href: '/board/accident' },
-  { name: '교육자료', href: '/board/education' },
-  { name: '안전점검 체크리스트', href: '/board/checklist' },
-  { name: '현장사진', href: '/board/photos' },
-  { name: 'Q&A', href: '/board/qna' },
+interface MenuItem {
+  key: 'home' | 'notice' | 'free' | 'resources' | 'law' | 'news' | 'accident' | 'education' | 'checklist' | 'photos' | 'qna';
+  href: string;
+}
+
+const menus: MenuItem[] = [
+  { key: 'home', href: '/' },
+  { key: 'notice', href: '/board/notice' },
+  { key: 'free', href: '/board/free' },
+  { key: 'resources', href: '/board/resources' },
+  { key: 'law', href: '/board/law' },
+  { key: 'news', href: '/board/news' },
+  { key: 'accident', href: '/board/accident' },
+  { key: 'education', href: '/board/education' },
+  { key: 'checklist', href: '/board/checklist' },
+  { key: 'photos', href: '/board/photos' },
+  { key: 'qna', href: '/board/qna' },
 ];
 
 export default function Sidebar() {
+  const t = useTranslations('nav');
   const pathname = usePathname();
+  const [isStaff, setIsStaff] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    const refresh = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      if (!userId) {
+        if (!cancelled) setIsStaff(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .single();
+      if (!cancelled) setIsStaff(!!profile?.is_admin);
+    };
+
+    refresh();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      refresh();
+    });
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <aside className="hidden w-56 shrink-0 md:block">
       <div className="sticky top-6 rounded-2xl bg-white p-4 shadow">
         <h2 className="mb-3 border-b border-gray-200 pb-3 text-base font-bold text-blue-900">
-          통합게시판
+          {t('boardTitle')}
         </h2>
 
         <nav className="space-y-0.5">
@@ -44,30 +84,34 @@ export default function Sidebar() {
                     : 'text-gray-700 hover:bg-blue-50 hover:text-blue-800'
                 }`}
               >
-                {menu.name}
+                {t(menu.key)}
               </Link>
             );
           })}
         </nav>
 
-        <Link
-          href="/admin"
-          className="mt-3 block rounded-lg border border-blue-900 px-3 py-2.5 text-center text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-900 hover:text-white"
-        >
-          관리자 메뉴
-        </Link>
-        <Link
-          href="/admin/users"
-          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-        >
-          회원 관리
-        </Link>
-        <Link
-          href="/admin/reports"
-          className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-        >
-          신고 관리
-        </Link>
+        {isStaff && (
+          <>
+            <Link
+              href="/admin"
+              className="mt-3 block rounded-lg border border-blue-900 px-3 py-2.5 text-center text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-900 hover:text-white"
+            >
+              {t('adminMenu')}
+            </Link>
+            <Link
+              href="/admin/users"
+              className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {t('userManage')}
+            </Link>
+            <Link
+              href="/admin/reports"
+              className="mt-2 block rounded-lg border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {t('reportManage')}
+            </Link>
+          </>
+        )}
       </div>
     </aside>
   );

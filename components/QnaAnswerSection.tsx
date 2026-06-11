@@ -5,14 +5,16 @@ import AnswerForm from './forms/AnswerForm';
 import AnswerOpinionForm from './forms/AnswerOpinionForm';
 import ReportButton from './ReportButton';
 import { getDisplayRole } from '@/lib/getDisplayRole';
-import { isSiteAdminProfile } from '@/lib/isSiteAdminProfile';
+import SelectAnswerButton from './SelectAnswerButton';
 
 type QnaAnswerSectionProps = {
   postId: number;
+  questionAuthorId: string | null;
 };
 
 export default async function QnaAnswerSection({
   postId,
+  questionAuthorId,
 }: QnaAnswerSectionProps) {
   const supabase = await createClient();
 
@@ -73,11 +75,14 @@ export default async function QnaAnswerSection({
   const { data: currentProfile } = userData.user
     ? await supabase
         .from('profiles')
-        .select('site_role, can_manage_site, is_admin')
+        .select('is_admin')
         .eq('id', userData.user.id)
         .single()
     : { data: null };
-  const isAdmin = isSiteAdminProfile(currentProfile);
+  const isAdmin = Boolean(currentProfile?.is_admin);
+  const isQuestionAuthor = Boolean(
+    userData.user && questionAuthorId && userData.user.id === questionAuthorId
+  );
   const typedAnswers = (answers ?? []) as unknown as AnswerWithAuthor[];
 
   return (
@@ -145,6 +150,13 @@ export default async function QnaAnswerSection({
                   targetType="answer"
                   targetId={answer.id}
                   reportedUserId={answer.author_id}
+                />
+              )}
+
+              {isQuestionAuthor && (
+                <SelectAnswerButton
+                  answerId={answer.id}
+                  isSelected={answer.is_selected}
                 />
               )}
             </div>

@@ -1,8 +1,11 @@
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import type { PostListItem } from '@/types';
 import { getDisplayRole } from '@/lib/getDisplayRole';
 
 export default function PostList({ posts }: { posts: PostListItem[] }) {
+  const t = useTranslations('common');
+
   if (posts.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-12 text-center text-gray-400">
@@ -36,15 +39,15 @@ export default function PostList({ posts }: { posts: PostListItem[] }) {
           </div>
 
           <div className="col-span-2 truncate text-gray-500">
-            {post.is_author_hidden
-              ? '운영진'
+            {post.hide_author
+              ? t('staffAuthor')
               : post.profiles?.nickname ??
                 post.profiles?.user_code ??
                 post.profiles?.public_id ??
                 post.profiles?.email ??
                 '알 수 없음'}
             <span className="ml-1 text-xs text-gray-400">
-              {post.is_author_hidden ? '' : getDisplayRole(post.profiles)}
+              {post.hide_author ? '' : getDisplayRole(post.profiles)}
             </span>
           </div>
 
