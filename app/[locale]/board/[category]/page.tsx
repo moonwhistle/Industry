@@ -25,30 +25,7 @@ const sortOptions = [
 ];
 
 const postListSelect = `
-  id,
-  title,
-  created_at,
-  view_count,
-  like_count,
-  comment_count,
-  hide_author,
-  profiles (
-    nickname,
-    email,
-    public_id,
-    user_code,
-    user_role,
-    job_role,
-    manager_type
-  )
-`;
-
-const fallbackPostListSelect = `
-  id,
-  title,
-  created_at,
-  view_count,
-  like_count,
+  *,
   profiles (
     nickname,
     email,
@@ -103,53 +80,28 @@ export default async function BoardPage({
 
   const supabase = await createClient();
 
-  const createPostListQuery = (selectColumns: string, useSubFilter = true) => {
-    let query = supabase
-      .from('posts')
-      .select(selectColumns)
-      .eq('category_slug', category);
+  let query = supabase
+    .from('posts')
+    .select(postListSelect)
+    .eq('category_slug', category);
 
-    if (activeSub && useSubFilter) {
-      query = query.eq('news_subcategory', activeSub);
-    }
+  if (activeSub) {
+    query = query.eq('news_subcategory', activeSub);
+  }
 
-    if (selectedSort === 'oldest') {
-      return query.order('created_at', { ascending: true });
-    }
+  if (selectedSort === 'oldest') {
+    query = query.order('created_at', { ascending: true });
+  } else if (selectedSort === 'likes') {
+    query = query.order('like_count', { ascending: false });
+  } else if (selectedSort === 'views') {
+    query = query.order('view_count', { ascending: false });
+  } else {
+    query = query.order('created_at', { ascending: false });
+  }
 
-    if (selectedSort === 'likes') {
-      return query.order('like_count', { ascending: false });
-    }
-
-    if (selectedSort === 'views') {
-      return query.order('view_count', { ascending: false });
-    }
-
-    return query.order('created_at', { ascending: false });
-  };
-
-  const result = await createPostListQuery(postListSelect);
-  let posts = result.data;
-  let queryError = result.error;
-
+  const { data: posts, error: queryError } = await query;
   if (queryError) {
-    console.error('[board] primary post list query failed:', queryError);
-
-    let fallbackResult = await createPostListQuery(fallbackPostListSelect);
-    if (fallbackResult.error && activeSub) {
-      console.error(
-        '[board] fallback post list query with news subcategory failed:',
-        fallbackResult.error
-      );
-      fallbackResult = await createPostListQuery(fallbackPostListSelect, false);
-    }
-
-    posts = fallbackResult.data;
-    queryError = fallbackResult.error;
-
-    if (queryError) {
-      console.error('[board] fallback post list query failed:', queryError);
-    }
+    console.error('[board] post list query failed:', queryError);
   }
 
   // 운영진 작성 글은 작성자 정보를 응답에서 제거(네트워크 유출 방지). 표시는 PostList 가 '운영진' 라벨로 처리.

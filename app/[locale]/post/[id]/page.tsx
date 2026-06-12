@@ -11,12 +11,8 @@ import { getDisplayRole } from '@/lib/getDisplayRole';
 import CommentSection from './CommentSection';
 
 const postSelect =
-  '*, profiles(nickname, email, public_id, user_code, user_role, industry, job_role, manager_type)';
-const fallbackPostSelect =
   '*, profiles(nickname, email, public_id, user_role, industry, manager_type)';
 const commentsSelect =
-  '*, profiles(nickname, email, public_id, user_code, user_role, job_role, manager_type)';
-const fallbackCommentsSelect =
   '*, profiles(nickname, email, public_id, user_role, manager_type)';
 
 export default async function PostDetailPage({
@@ -40,8 +36,8 @@ export default async function PostDetailPage({
   }
 
   const [
-    initialPostResult,
-    initialCommentsResult,
+    postResult,
+    commentsResult,
     attachmentsResult,
     { data: userData },
   ] = await Promise.all([
@@ -63,33 +59,12 @@ export default async function PostDetailPage({
     supabase.auth.getUser(),
   ]);
 
-  let postResult = initialPostResult;
-  let commentsResult = initialCommentsResult;
-
   if (postResult.error) {
-    console.error('[post] primary post query failed:', postResult.error);
-    postResult = await supabase
-      .from('posts')
-      .select(fallbackPostSelect)
-      .eq('id', postId)
-      .single();
-
-    if (postResult.error) {
-      console.error('[post] fallback post query failed:', postResult.error);
-    }
+    console.error('[post] post query failed:', postResult.error);
   }
 
   if (commentsResult.error) {
-    console.error('[post] primary comments query failed:', commentsResult.error);
-    commentsResult = await supabase
-      .from('comments')
-      .select(fallbackCommentsSelect)
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true });
-
-    if (commentsResult.error) {
-      console.error('[post] fallback comments query failed:', commentsResult.error);
-    }
+    console.error('[post] comments query failed:', commentsResult.error);
   }
 
   if (attachmentsResult.error) {
