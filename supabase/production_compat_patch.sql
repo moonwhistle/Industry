@@ -17,7 +17,11 @@
 
 alter table profiles
   add column if not exists user_code text unique,
-  add column if not exists job_role text;
+  add column if not exists job_role text,
+  add column if not exists site_role text default 'member'
+    check (site_role in ('member', 'staff', 'owner')),
+  add column if not exists can_manage_site boolean default false,
+  add column if not exists is_admin boolean default false;
 
 update profiles
 set user_code = coalesce(user_code, public_id, 'USER-' || left(id::text, 8))
@@ -25,6 +29,7 @@ where user_code is null;
 
 alter table posts
   add column if not exists comment_count int default 0,
+  add column if not exists is_hidden boolean default false,
   add column if not exists hide_author boolean not null default false,
   add column if not exists news_subcategory text;
 
@@ -48,6 +53,67 @@ create table if not exists post_attachments (
   storage_path text,
   created_at timestamptz default now()
 );
+
+create index if not exists post_attachments_post_id_created_at_idx
+  on post_attachments (post_id, created_at);
+
+alter table post_attachments enable row level security;
+
+create or replace function is_current_user_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from profiles
+    where id = auth.uid()
+      and (
+        site_role in ('owner', 'staff')
+        or can_manage_site = true
+        or is_admin = true
+      )
+  );
+$$;
+
+drop policy if exists "post_attachments: 전체 읽기 허용" on post_attachments;
+create policy "post_attachments: 전체 읽기 허용"
+  on post_attachments for select
+  using (
+    exists (
+      select 1
+      from posts
+      where posts.id = post_attachments.post_id
+        and (posts.is_hidden = false or is_current_user_admin())
+    )
+  );
+
+drop policy if exists "post_attachments: 작성자만 추가" on post_attachments;
+create policy "post_attachments: 작성자만 추가"
+  on post_attachments for insert
+  with check (
+    exists (
+      select 1
+      from posts
+      where posts.id = post_attachments.post_id
+        and posts.author_id = auth.uid()
+    )
+  );
+
+drop policy if exists "post_attachments: 작성자와 관리자는 삭제" on post_attachments;
+create policy "post_attachments: 작성자와 관리자는 삭제"
+  on post_attachments for delete
+  using (
+    is_current_user_admin()
+    or exists (
+      select 1
+      from posts
+      where posts.id = post_attachments.post_id
+        and posts.author_id = auth.uid()
+    )
+  );
 
 create or replace function refresh_post_comment_count()
 returns trigger
